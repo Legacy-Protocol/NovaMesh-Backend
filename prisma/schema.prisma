@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String       @id @default(uuid())
+  email         String       @unique
+  oauthProvider String?
+  oauthId       String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  wallets       Wallet[]
+  agents        Agent[]      @relation("CreatorAgents")
+  executions    Execution[]
+  reviews       Review[]
+  subscriptions Subscription[]
+}
+
+model Wallet {
+  id          String   @id @default(uuid())
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  address     String   @unique
+  publicKey   String?
+  balanceUsdc Decimal  @default("0")
+  balanceEurau Decimal @default("0")
+  createdAt   DateTime @default(now())
+}
+
+model Agent {
+  id               String        @id @default(cuid())
+  creator          User          @relation("CreatorAgents", fields: [creatorId], references: [id])
+  creatorId        String
+  name             String
+  description      String?
+  category         String?
+  iconUrl          String?
+  endpointUrl      String
+  pricePerCall     Decimal       @default("0")
+  subscriptionPrice Decimal      @default("0")
+  verificationTier Int           @default(0)
+  verificationDate DateTime?
+  status           String        @default("active")
+  totalExecutions  Int           @default(0)
+  successRate      Decimal       @default("0")
+  avgRating        Decimal       @default("0")
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  executions       Execution[]
+  reviews          Review[]
+  subscriptions    Subscription[]
+  analytics        AgentAnalytics[]
+}
+
+model Execution {
+  id            String   @id @default(uuid())
+  agent         Agent    @relation(fields: [agentId], references: [id])
+  agentId       String
+  user          User     @relation(fields: [userId], references: [id])
+  userId        String
+  amountUsdc    Decimal
+  currency      String
+  stellarTxId   String   @unique
+  status        String
+  resultJson    Json?
+  responseTimeMs Int?
+  createdAt     DateTime @default(now())
+  completedAt   DateTime?
+  review        Review?
+}
+
+model Review {
+  id          String    @id @default(uuid())
+  agent       Agent     @relation(fields: [agentId], references: [id])
+  agentId     String
+  user        User      @relation(fields: [userId], references: [id])
+  userId      String
+  execution   Execution @relation(fields: [executionId], references: [id])
+  executionId String   @unique
+  rating      Int
+  text        String?
+  isHelpful   Int      @default(0)
+  isFlagged   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model Subscription {
+  id                  String   @id @default(uuid())
+  agent               Agent    @relation(fields: [agentId], references: [id])
+  agentId             String
+  user                User     @relation(fields: [userId], references: [id])
+  userId              String
+  plan                String
+  status              String
+  amountUsdc          Decimal
+  billingCycle        String
+  nextBillingDate     DateTime?
+  stripeSubscriptionId String?
+  createdAt           DateTime @default(now())
+  cancelledAt         DateTime?
+}
+
+model AgentAnalytics {
+  id            String   @id @default(uuid())
+  agent         Agent    @relation(fields: [agentId], references: [id])
+  agentId       String
+  day           DateTime
+  executions    Int      @default(0)
+  revenueUsdc   Decimal  @default("0")
+  newUsers      Int      @default(0)
+  returningUsers Int     @default(0)
+  avgRating     Decimal  @default("0")
+  successRate   Decimal  @default("0")
+  @@unique([agentId, day])
+}

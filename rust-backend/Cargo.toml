@@ -1,0 +1,19 @@
+[package]
+name = "novamesh_rust_backend"
+version = "0.1.0"
+edition = "2021"\nauthors = ["NovaMesh"]
+description = "Rust backend service for NovaMesh payment processing and Stellar integration."
+license = "MIT"
+
+[dependencies]
+actix-web = "4.4"
+actix-rt = "2.8"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "macros"] }
+tokio = { version = "1.40", features = ["full"] }
+dotenvy = "0.15"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
+stellar-sdk = "0.25"
+anyhow = "1.0"
